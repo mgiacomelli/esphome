@@ -59,7 +59,7 @@ class PASCO2Component : public sensor::Sensor, public PollingComponent, public i
   uint16_t ambient_pressure_;
   uint32_t polling_interval_;
   bool enable_asc_;
-  MeasurementMode measurement_mode_{PERIODIC};
+  MeasurementMode measurement_mode_{SINGLE_SHOT};
   GPIOPin *enable_pin_{nullptr};
   // used for compensation
   sensor::Sensor *ambient_pressure_source_{nullptr};
