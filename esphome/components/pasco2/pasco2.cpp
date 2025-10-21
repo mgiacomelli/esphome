@@ -154,7 +154,7 @@ void PASCO2Component::loop() {
 
     case InitializationState::WRITE_SCRATCH_PAD:
       if (millis() - this->last_action_time_ >= 100) {
-        if (!this->write_byte(XENSIV_PASCO2_REG_SCRATCH_PAD, XENSIV_PASCO2_COMM_TEST_VAL, true)) {
+        if (!this->write_byte(XENSIV_PASCO2_REG_SCRATCH_PAD, XENSIV_PASCO2_COMM_TEST_VAL)) {
           if (--this->remaining_retries_ == 0) {
             ESP_LOGE(TAG, "Failed to Write Scratch Pad");
             this->error_code_ = COMM_FAILED;
@@ -191,7 +191,7 @@ void PASCO2Component::loop() {
 
     case InitializationState::SOFT_RESET:
       if (millis() - this->last_action_time_ >= 100) {
-        if (!this->write_byte(XENSIV_PASCO2_REG_SENS_RST, XENSIV_PASCO2_CMD_SOFT_RESET, true)) {
+        if (!this->write_byte(XENSIV_PASCO2_REG_SENS_RST, XENSIV_PASCO2_CMD_SOFT_RESET)) {
           ESP_LOGE(TAG, "Error Sending Soft Reset.");
           this->error_code_ = SOFT_RESET_FAILED;
           this->mark_failed();
@@ -254,7 +254,7 @@ bool PASCO2Component::read_sensor_(int16_t *co2result) {
   // Check if data is ready
   uint8_t read_back;
 
-  int error_code = this->read_register(XENSIV_PASCO2_REG_MEAS_STS, &read_back, 1, true);
+  int error_code = this->read_register(XENSIV_PASCO2_REG_MEAS_STS, &read_back, 1);
   switch (error_code) {
     case i2c::ErrorCode::NO_ERROR:
       break;
@@ -404,7 +404,7 @@ bool PASCO2Component::perform_forced_calibration(uint16_t current_co2_concentrat
   calibrating_ = true;
 
   // set device to idle
-  if (!this->write_byte(XENSIV_PASCO2_REG_MEAS_CFG, XENSIV_PASCO2_REG_MEAS_CFG_OP_MODE_IDLE, true)) {
+  if (!this->write_byte(XENSIV_PASCO2_REG_MEAS_CFG, XENSIV_PASCO2_REG_MEAS_CFG_OP_MODE_IDLE)) {
     ESP_LOGE(TAG, "Failed to stop measurements");
     this->status_set_warning();
   }
@@ -419,8 +419,7 @@ bool PASCO2Component::perform_forced_calibration(uint16_t current_co2_concentrat
   }
   // set force calibration flag, this starts the calibration process and data acquisition
   if (!this->write_byte(XENSIV_PASCO2_REG_MEAS_CFG,
-                        XENSIV_PASCO2_REG_MEAS_CFG_BOC_CFG_FORCE | XENSIV_PASCO2_REG_MEAS_CFG_OP_MODE_CONTINOUS,
-                        true)) {
+                        XENSIV_PASCO2_REG_MEAS_CFG_BOC_CFG_FORCE | XENSIV_PASCO2_REG_MEAS_CFG_OP_MODE_CONTINOUS)) {
     ESP_LOGE(TAG, "Failed to force calibration");
     this->status_set_warning();
   }
@@ -445,13 +444,13 @@ bool PASCO2Component::perform_forced_calibration(uint16_t current_co2_concentrat
           return RetryResult::RETRY;
         }
 
-        if (!this->write_byte(XENSIV_PASCO2_REG_MEAS_CFG, XENSIV_PASCO2_REG_MEAS_CFG_OP_MODE_IDLE, true)) {
+        if (!this->write_byte(XENSIV_PASCO2_REG_MEAS_CFG, XENSIV_PASCO2_REG_MEAS_CFG_OP_MODE_IDLE)) {
           ESP_LOGE(TAG, "Failed to idle measurement");
           this->status_set_warning();
         }
 
         // store calibraiton data to NVRAM
-        if (!this->write_byte(XENSIV_PASCO2_REG_SENS_RST, XENSIV_PASCO2_CMD_SAVE_FCS_CALIB_OFFSET, true)) {
+        if (!this->write_byte(XENSIV_PASCO2_REG_SENS_RST, XENSIV_PASCO2_CMD_SAVE_FCS_CALIB_OFFSET)) {
           ESP_LOGE(TAG, "Failed to save calibration to NVRAM");
           this->status_set_warning();
         }
@@ -498,7 +497,7 @@ bool PASCO2Component::update_ambient_pressure_compensation_(uint16_t pressure_in
 bool PASCO2Component::start_measurement_() {
   // stop any existing measurements
   if (!this->write_byte(XENSIV_PASCO2_REG_MEAS_CFG,
-                        XENSIV_PASCO2_REG_MEAS_CFG_OP_MODE_IDLE | XENSIV_PASCO2_REG_MEAS_CFG_BOC_CFG_ENABLE, true)) {
+                        XENSIV_PASCO2_REG_MEAS_CFG_OP_MODE_IDLE | XENSIV_PASCO2_REG_MEAS_CFG_BOC_CFG_ENABLE)) {
     ESP_LOGE(TAG, "Failed to stop measurements");
     this->status_set_warning();
     return false;
@@ -517,7 +516,7 @@ bool PASCO2Component::start_measurement_() {
                           XENSIV_PASCO2_REG_MEAS_CFG_PWM_OUTEN_EN;
   }
 
-  if (!this->write_byte(XENSIV_PASCO2_REG_MEAS_CFG, measurement_command, true)) {
+  if (!this->write_byte(XENSIV_PASCO2_REG_MEAS_CFG, measurement_command)) {
     // this is not necessarily an error, the sensor may be temporarily busy and not responding
     return false;
   }
